@@ -72,7 +72,10 @@ def pkt_callback(pkt) -> None:
         recv += data
 
         if pkt[DNS].z == 1:
-            print(decode(recv).decode())
+            try:
+                print(decode(recv).decode())
+            except:
+                print("Data got corrupted!")
             recv = b""
 
         reply(pkt)
