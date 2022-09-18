@@ -127,6 +127,7 @@ def send_data(data: bytes) -> None:
 
 
 def main():
+    print("Client started!")
     threading.Thread(target=pulse).start()
 
 

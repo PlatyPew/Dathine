@@ -116,6 +116,7 @@ def user_input():
 
 
 def main():
+    print("Server started!")
     threading.Thread(target=user_input).start()
 
     # Sniff dns packets
