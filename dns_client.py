@@ -28,7 +28,7 @@ parser.add_argument(
     action='store',
     type=float,
     help='How often to pulse the server in seconds (Lower number means faster response time)',
-    default=0.02)
+    default=1)
 parser.add_argument(
     '-t',
     '--timeout',
