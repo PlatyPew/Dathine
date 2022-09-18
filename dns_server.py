@@ -3,10 +3,28 @@ from scapy.all import IP, UDP, DNS, DNSRR, send, sniff
 from base64 import b64encode, b64decode
 
 import threading
+import argparse
 
-PUBLIC_IP = "20.249.220.128"
-IFACE = "eth0"
-DOMAIN = "platypew.social"
+parser = argparse.ArgumentParser(description="DNS Reverse Shell Server")
+parser.add_argument('domain', metavar='domain', type=str, help='Domain to connect to')
+parser.add_argument('-i',
+                    '--interface',
+                    action='store',
+                    type=str,
+                    help='Interface to use',
+                    default='eth0')
+parser.add_argument('-p',
+                    '--ip',
+                    action='store',
+                    type=str,
+                    help='Public IP of server',
+                    required=True)
+
+args = parser.parse_args()
+
+PUBLIC_IP = args.ip
+IFACE = args.interface
+DOMAIN = args.domain
 
 FRAG_LEN = 70 - len(DOMAIN)
 
