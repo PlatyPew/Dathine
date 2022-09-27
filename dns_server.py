@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from scapy.all import IP, UDP, DNS, DNSRR, send, sniff
 from base64 import b64encode, b64decode
+from urllib import request
 
 import threading
 import argparse
@@ -18,7 +19,7 @@ parser.add_argument('-p',
                     action='store',
                     type=str,
                     help='Public IP of server',
-                    required=True)
+                    default=request.urlopen('https://ipinfo.io/ip').read().decode())
 
 args = parser.parse_args()
 
