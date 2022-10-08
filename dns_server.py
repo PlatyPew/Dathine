@@ -36,6 +36,8 @@ KEY = hashlib.sha256(args.key.encode()).digest()
 
 FRAG_LEN = 70 - len(DOMAIN)
 
+lock = False
+
 recv = b""  # Buffer of received data to process
 queue = []  # List of commands to run
 buf = []  # Break commands to send into smaller fragmented pieces
@@ -111,6 +113,7 @@ def decode(data: bytes) -> str:
 
 # Handle packets that come in
 def pkt_callback(pkt) -> None:
+    global lock
     global queue
     global recv
     global buf
@@ -129,6 +132,8 @@ def pkt_callback(pkt) -> None:
             except:
                 # UDP may lose data, oh wells...
                 print("Data got corrupted!")
+            finally:
+                lock = False
             recv = b""
 
         reply(pkt)
@@ -145,8 +150,11 @@ def pkt_callback(pkt) -> None:
 
 # Handle user input
 def user_input():
+    global lock
     while True:
-        queue.append(input().encode())
+        if not lock:
+            queue.append(input("> ").encode())
+            lock = True
 
 
 def main():
