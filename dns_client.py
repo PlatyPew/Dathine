@@ -13,7 +13,7 @@ import signal
 
 
 def ctrl_c_handler(signal, frame):
-    print("Client Stopped")
+    print("\nClient Stopped")
     exit(0)
 
 

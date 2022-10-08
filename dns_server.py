@@ -12,7 +12,7 @@ import os
 
 
 def ctrl_c_handler(signal, frame):
-    print("Server Stopped")
+    print("\nServer Stopped")
     os._exit(0)
 
 
