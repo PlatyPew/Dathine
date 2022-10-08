@@ -7,6 +7,16 @@ import threading
 import argparse
 import zlib
 import hashlib
+import signal
+import os
+
+
+def ctrl_c_handler(signal, frame):
+    print("Server Stopped")
+    os._exit(0)
+
+
+signal.signal(signal.SIGINT, ctrl_c_handler)
 
 parser = argparse.ArgumentParser(description="DNS Reverse Shell Server")
 parser.add_argument('domain', metavar='domain', type=str, help='Domain to connect to')
