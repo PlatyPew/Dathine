@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+from warnings import filterwarnings
+filterwarnings("ignore")
+
 from scapy.all import IP, UDP, DNS, DNSQR, sr, sr1
 from base64 import b64encode, b64decode
 from random import randint, choice

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+from warnings import filterwarnings
+filterwarnings("ignore")
+
 from scapy.all import IP, UDP, DNS, DNSRR, send, sniff
 from base64 import b64encode, b64decode
 from Crypto.Cipher import AES
