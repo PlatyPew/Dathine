@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from warnings import filterwarnings
+
 filterwarnings("ignore")
 
 from scapy.all import IP, UDP, DNS, DNSQR, sr, sr1
