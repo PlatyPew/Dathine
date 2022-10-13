@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 from warnings import filterwarnings
+
 filterwarnings("ignore")
 
 from scapy.all import IP, UDP, DNS, DNSRR, send, sniff
 from base64 import b64encode, b64decode
 from Crypto.Cipher import AES
+from urllib import request
 
 import threading
 import argparse
@@ -30,9 +32,16 @@ parser.add_argument('-i',
                     help='Interface to use',
                     default='eth0')
 parser.add_argument('-k', '--key', action='store', type=str, help='Password to use', required=True)
+parser.add_argument('-p',
+                    '--ip',
+                    action='store',
+                    type=str,
+                    help='Public IP of server',
+                    default=request.urlopen('https://ipinfo.io/ip').read().decode())
 
 args = parser.parse_args()
 
+PUBLIC_IP = args.ip
 IFACE = args.interface
 DOMAIN = args.domain
 KEY = hashlib.sha256(args.key.encode()).digest()
@@ -68,7 +77,7 @@ def reply(pkt, data=False) -> None:
               aa=1,
               qr=1,
               z=z,
-              an=DNSRR(rrname=data, type='A', ttl=600))
+              an=DNSRR(rrname=data, type='A', ttl=600, rdata=PUBLIC_IP))
 
     # Send the data
     send(ip / udp / dns, iface=IFACE, verbose=False)
